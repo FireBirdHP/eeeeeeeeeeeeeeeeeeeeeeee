@@ -18,41 +18,40 @@ jobs:
                              -Name "UserAuthentication" -Value 0 -Force
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' `
                              -Name "SecurityLayer" -Value 0 -Force
-
           # Remove any existing rule with the same name to avoid duplication
           netsh advfirewall firewall delete rule name="RDP-Tailscale"
           
           # For testing, allow any incoming connection on port 3389
           netsh advfirewall firewall add rule name="RDP-Tailscale" `
             dir=in action=allow protocol=TCP localport=3389
-
           # (Optional) Restart the Remote Desktop service to ensure changes take effect
           Restart-Service -Name TermService -Force
 
       - name: Create User
         run: |
-          Add-Type -AssemblyName System.Security
-          New-LocalUser -Name "plsmeow" -Password "plsmeow" -AccountNeverExpires
+          $password = ConvertTo-SecureString "plsmeow" -AsPlainText -Force
+          New-LocalUser -Name "plsmeow" -Password $password -AccountNeverExpires
           Add-LocalGroupMember -Group "Administrators" -Member "plsmeow"
           Add-LocalGroupMember -Group "Remote Desktop Users" -Member "plsmeow"
           
-          echo "RDP_CREDS=User: plsmeow | Password: $password" >> $env:GITHUB_ENV
+          echo "RDP_CREDS=User: plsmeow | Password: plsmeow" >> $env:GITHUB_ENV
           
           if (-not (Get-LocalUser -Name "plsmeow")) {
               Write-Error "User creation failed"
               exit 1
           }
 
-     - name: SSH Tunnel 
-     run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-    
+      - name: SSH Tunnel 
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
       - name: SSH Tunnel with key
-          run: ssh -N -R 3389:local:3389 plsmeow@195.133.146.20
+        run: ssh -N -R 3389:localhost:3389 plsmeow@195.133.146.20
+
       - name: Connection
-          run: |
+        run: |
           Write-Host "`n=== RDP ACCESS ==="
           Write-Host "Address: 195.133.146.20"
           Write-Host "Username: plsmeow"
