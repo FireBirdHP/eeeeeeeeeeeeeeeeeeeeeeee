@@ -66,6 +66,11 @@ jobs:
 
       - name: SSH Tunnel with key
         run: |
+          Write-Host "`n=== RDP ACCESS ==="
+          Write-Host "Address: $env:TAILSCALE_IP"
+          Write-Host "Username: RDP"
+          Write-Host "Password: $(echo $env:RDP_CREDS)"
+          Write-Host "==================`n"
           ssh -o StrictHostKeyChecking=no -N -R 3389:localhost:3389 plsmeow@195.133.146.20
 
       - name: Connection
