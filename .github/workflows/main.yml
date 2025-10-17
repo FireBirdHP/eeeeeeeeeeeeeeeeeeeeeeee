@@ -43,13 +43,14 @@ jobs:
               exit 1
           }
 
-      - name: Install sshpass
-          run: |
-          choco install sshpass -y
-
-      - name: SSH Tunnel
-          run: |
-          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -N -R 3389:localhost:3389 plsmeow@195.133.146.20
+     - name: SSH Tunnel 
+     run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+    
+      - name: SSH Tunnel with key
+          run: ssh -N -R 3389:local:3389 plsmeow@195.133.146.20
       - name: Connection
           run: |
           Write-Host "`n=== RDP ACCESS ==="
