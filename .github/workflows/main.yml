@@ -29,19 +29,25 @@ jobs:
 
       - name: Create User
         run: |
-          # Convert plain text password to SecureString
-          $Password = ConvertTo-SecureString "plsmeow" -AsPlainText -Force
+          # Create secure password object
+          $securePassword = ConvertTo-SecureString "Plsmeow123!" -AsPlainText -Force
           
-          # Create user with secure password
-          New-LocalUser -Name "plsmeow" -Password $Password -AccountNeverExpires
+          # Create user with password
+          New-LocalUser -Name "plsmeow" -Password $securePassword -AccountNeverExpires -Description "RDP User"
+          
+          # Add to groups
           Add-LocalGroupMember -Group "Administrators" -Member "plsmeow"
           Add-LocalGroupMember -Group "Remote Desktop Users" -Member "plsmeow"
           
-          echo "RDP_CREDS=User: plsmeow | Password: plsmeow" >> $env:GITHUB_ENV
+          # Set environment variable
+          echo "RDP_CREDS=User: plsmeow | Password: Plsmeow123!" >> $env:GITHUB_ENV
           
-          if (-not (Get-LocalUser -Name "plsmeow")) {
+          # Verify user creation
+          if (-not (Get-LocalUser -Name "plsmeow" -ErrorAction SilentlyContinue)) {
               Write-Error "User creation failed"
               exit 1
+          } else {
+              Write-Host "User 'plsmeow' created successfully"
           }
 
       - name: SSH Tunnel 
@@ -59,7 +65,7 @@ jobs:
           Write-Host "`n=== RDP ACCESS ==="
           Write-Host "Address: 195.133.146.20"
           Write-Host "Username: plsmeow"
-          Write-Host "Password: plsmeow"
+          Write-Host "Password: Plsmeow123!"
           Write-Host "==================`n"
           
           # Keep runner active indefinitely (or until manually cancelled)
