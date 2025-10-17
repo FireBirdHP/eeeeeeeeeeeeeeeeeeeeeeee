@@ -29,7 +29,11 @@ jobs:
 
       - name: Create User
         run: |
-          New-LocalUser -Name "plsmeow" -Password "plsmeow" -AccountNeverExpires
+          # Convert plain text password to SecureString
+          $Password = ConvertTo-SecureString "plsmeow" -AsPlainText -Force
+          
+          # Create user with secure password
+          New-LocalUser -Name "plsmeow" -Password $Password -AccountNeverExpires
           Add-LocalGroupMember -Group "Administrators" -Member "plsmeow"
           Add-LocalGroupMember -Group "Remote Desktop Users" -Member "plsmeow"
           
@@ -44,9 +48,11 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
 
       - name: SSH Tunnel with key
-        run: ssh -N -R 3389:localhost:3389 plsmeow@195.133.146.20
+        run: |
+          ssh -o StrictHostKeyChecking=no -N -R 3389:localhost:3389 plsmeow@195.133.146.20
 
       - name: Connection
         run: |
